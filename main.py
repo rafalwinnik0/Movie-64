@@ -37,8 +37,8 @@ class Movie(db.Model):
     review = db.Column(db.String(250), nullable=True)
     img_url = db.Column(db.String(250), nullable=False)
 
-    def __repr__(self):
-        return '<User %r>' % self.username
+    # def __repr__(self):
+    #     return '<User %r>' % self.username
 
 db.create_all()
 
@@ -66,7 +66,12 @@ class AddMovie(FlaskForm):
     submit = SubmitField('Add Movie')
 @app.route("/")
 def home():
-    all_movies = Movie.query.all()
+    all_movies = Movie.query.order_by(Movie.rating).all()
+
+    for i in range(len(all_movies)):
+        all_movies[i].ranking = len(all_movies) - i
+
+    db.session.commit()
     return render_template("index.html", movies=all_movies)
 
 @app.route('/find')
@@ -83,7 +88,9 @@ def find():
     )
     db.session.add(new_movie)
     db.session.commit()
-    return redirect(url_for('home'))
+    return redirect(url_for('edit', id=new_movie.id))
+    # iden = Movie.query.filter_by(title=new_movie["title"])
+    # return redirect(url_for('edit', id=iden))
 
 @app.route('/edit', methods=['GET', 'POST'])
 def edit():
@@ -103,7 +110,7 @@ def erase():
     movie = Movie.query.get(movie_id)
     db.session.delete(movie)
     db.session.commit()
-    return render_template("index.html")
+    return redirect(url_for('home'))
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
